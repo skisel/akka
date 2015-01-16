@@ -4,7 +4,6 @@
 package akka.testkit
 
 import language.{ postfixOps, reflectiveCalls }
-
 import org.scalatest.{ WordSpecLike, BeforeAndAfterAll }
 import org.scalatest.Matchers
 import akka.actor.ActorSystem
@@ -14,6 +13,7 @@ import scala.concurrent.Future
 import com.typesafe.config.{ Config, ConfigFactory }
 import akka.dispatch.Dispatchers
 import akka.testkit.TestEvent._
+import org.scalautils.ConversionCheckedTripleEquals
 
 object AkkaSpec {
   val testConf: Config = ConfigFactory.parseString("""
@@ -52,7 +52,8 @@ object AkkaSpec {
 }
 
 abstract class AkkaSpec(_system: ActorSystem)
-  extends TestKit(_system) with WordSpecLike with Matchers with BeforeAndAfterAll with WatchedByCoroner {
+  extends TestKit(_system) with WordSpecLike with Matchers with BeforeAndAfterAll with WatchedByCoroner
+  with ConversionCheckedTripleEquals {
 
   def this(config: Config) = this(ActorSystem(AkkaSpec.getCallerName(getClass),
     ConfigFactory.load(config.withFallback(AkkaSpec.testConf))))

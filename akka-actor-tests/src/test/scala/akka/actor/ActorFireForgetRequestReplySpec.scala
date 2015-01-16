@@ -68,7 +68,7 @@ class ActorFireForgetRequestReplySpec extends AkkaSpec with BeforeAndAfterEach w
       val senderActor = system.actorOf(Props(new SenderActor(replyActor)))
       senderActor ! "Init"
       state.finished.await
-      state.s should be("Reply")
+      state.s should ===("Reply")
     }
 
     "reply to bang message using implicit sender" in {
@@ -76,7 +76,7 @@ class ActorFireForgetRequestReplySpec extends AkkaSpec with BeforeAndAfterEach w
       val senderActor = system.actorOf(Props(new SenderActor(replyActor)))
       senderActor ! "InitImplicit"
       state.finished.await
-      state.s should be("ReplyImplicit")
+      state.s should ===("ReplyImplicit")
     }
 
     "shutdown crashed temporary actor" in {
@@ -84,11 +84,11 @@ class ActorFireForgetRequestReplySpec extends AkkaSpec with BeforeAndAfterEach w
         val supervisor = system.actorOf(Props(new Supervisor(
           OneForOneStrategy(maxNrOfRetries = 0)(List(classOf[Exception])))))
         val actor = Await.result((supervisor ? Props[CrashingActor]).mapTo[ActorRef], timeout.duration)
-        actor.isTerminated should be(false)
+        actor.isTerminated should ===(false)
         actor ! "Die"
         state.finished.await
         Thread.sleep(1.second.dilated.toMillis)
-        actor.isTerminated should be(true)
+        actor.isTerminated should ===(true)
         system.stop(supervisor)
       }
     }
