@@ -76,9 +76,10 @@ private[akka] abstract class TcpStreamActor(val settings: MaterializerSettings) 
       case PeerClosed ⇒
         closed = true
         readPump.pump()
-      case ErrorClosed(cause) ⇒ fail(new StreamTcpException(s"The connection closed with error $cause"))
-      case CommandFailed(cmd) ⇒ fail(new StreamTcpException(s"Tcp command [$cmd] failed"))
-      case Aborted            ⇒ fail(new StreamTcpException("The connection has been aborted"))
+      case ErrorClosed(cause)              ⇒ fail(new StreamTcpException(s"The connection closed with error $cause"))
+      case CommandFailed(cmd, Some(cause)) ⇒ fail(cause)
+      case CommandFailed(cmd)              ⇒ fail(new StreamTcpException(s"Tcp command [$cmd] failed"))
+      case Aborted                         ⇒ fail(new StreamTcpException("The connection has been aborted"))
     }
 
     override def inputsAvailable: Boolean = pendingElement ne null
@@ -234,6 +235,11 @@ private[akka] class OutboundTcpStreamActor(processorPromise: Promise[Processor[B
       localAddressPromise.success(localAddress)
       processorPromise.success(exposedProcessor)
       initSteps.become(Actor.emptyBehavior)
+
+    case CommandFailed(_, Some(ex)) ⇒
+      localAddressPromise.failure(ex)
+      processorPromise.failure(ex)
+      fail(ex)
 
     case f: CommandFailed ⇒
       val ex = new StreamTcpException("Connection failed.")
